@@ -82,7 +82,19 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
     const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
     
     const resultCode = xmlDoc.querySelector('Result')?.textContent || '';
-    const transToken = xmlDoc.querySelector('TransToken')?.textContent || '';
+    let transToken = xmlDoc.querySelector('TransToken')?.textContent || '';
+
+    // Clean up the transaction token by removing any unnecessary prefixes
+    if (transToken.includes('TEST_TOKEN_')) {
+      transToken = transToken.split('TEST_TOKEN_')[1];
+    }
+    if (transToken.includes('&timeout=')) {
+      transToken = transToken.split('&timeout=')[0];
+    }
+    if (transToken.includes('https://secure.3gdirectpay.com/payv3.php?ID=')) {
+      transToken = transToken.replace('https://secure.3gdirectpay.com/payv3.php?ID=', '');
+    }
+
     const resultExplanation = xmlDoc.querySelector('ResultExplanation')?.textContent || '';
 
     console.log('Parsed DPO response:', {
