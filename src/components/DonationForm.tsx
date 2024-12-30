@@ -15,18 +15,21 @@ const DonationForm = () => {
     try {
       // Step 1: Create token
       const tokenResponse = await createDPOToken(amount);
+      console.log('Token Response:', tokenResponse); // Debug log
       
       if (tokenResponse.Result === "000") {
-        // Step 2: Redirect to DPO payment page with increased timeout
-        const paymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${tokenResponse.TransToken}&timeout=1800`;
-        
         // Store the token in sessionStorage for verification after redirect
         sessionStorage.setItem('dpoTransToken', tokenResponse.TransToken);
+        
+        // Construct payment URL
+        const paymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${tokenResponse.TransToken}&timeout=1800`;
+        console.log('Redirecting to:', paymentUrl); // Debug log
         
         // Redirect to payment page
         window.location.href = paymentUrl;
       } else {
         toast.error(`Payment initialization failed: ${tokenResponse.ResultExplanation}`);
+        console.error('Payment initialization failed:', tokenResponse);
       }
     } catch (error) {
       toast.error("Failed to process payment. Please try again.");

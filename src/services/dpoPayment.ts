@@ -11,7 +11,7 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
         <RedirectURL>https://apolytosmanagement.com/payment-complete</RedirectURL>
         <BackURL>https://apolytosmanagement.com/donation</BackURL>
         <CompanyRefUnique>0</CompanyRefUnique>
-        <PTL>4</PTL>
+        <PTL>30</PTL>
       </Transaction>
       <Services>
         <Service>
@@ -30,7 +30,6 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
       headers: {
         'Content-Type': 'application/xml',
         'Accept': 'application/xml',
-        'Origin': window.location.origin,
       },
       mode: 'cors',
       body: xmlRequest,
@@ -53,15 +52,9 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
     const resultCode = xmlDoc.querySelector('Result')?.textContent || '';
     let transToken = xmlDoc.querySelector('TransToken')?.textContent || '';
 
-    // Extract the token from the URL if necessary
-    const tokenMatch = transToken.match(/ID=([^&]+)/); // Matches "ID=..."
-    if (tokenMatch) {
-      transToken = tokenMatch[1]; // Extracts the actual token part
-    }
-
-    // Remove the TEST_TOKEN prefix if it exists
-    if (transToken.startsWith('TEST_TOKEN_')) {
-      transToken = transToken.replace('TEST_TOKEN_', '');
+    // Only clean the token if it contains unnecessary parts
+    if (transToken.includes('TEST_TOKEN_')) {
+      transToken = transToken.split('TEST_TOKEN_')[1];
     }
 
     const resultExplanation = xmlDoc.querySelector('ResultExplanation')?.textContent || '';
