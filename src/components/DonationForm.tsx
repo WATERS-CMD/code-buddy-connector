@@ -26,7 +26,7 @@ const DonationForm = () => {
           <RedirectURL>https://apolytosmanagement.com/payment-complete</RedirectURL>
           <BackURL>https://apolytosmanagement.com/donation</BackURL>
           <CompanyRefUnique>0</CompanyRefUnique>
-          <PTL>5</PTL>
+          <PTL>30</PTL>
         </Transaction>
         <Services>
           <Service>
@@ -76,8 +76,8 @@ const DonationForm = () => {
       const paymentResponse = await createDPOPaymentRequest();
       
       if (paymentResponse.Result === "000") {
-        // Redirect to DPO payment page
-        const paymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${paymentResponse.TransToken}`;
+        // Redirect to DPO payment page with increased timeout parameter
+        const paymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${paymentResponse.TransToken}&timeout=1800`;
         window.location.href = paymentUrl;
       } else {
         toast.error(`Payment initialization failed: ${paymentResponse.ResultExplanation}`);
