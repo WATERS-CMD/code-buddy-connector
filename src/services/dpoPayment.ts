@@ -20,6 +20,7 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
     processEntities: true,
     suppressBooleanAttributes: false
   });
+
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
@@ -28,11 +29,6 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
   });
 
   const xmlObj = {
-    "?xml": {
-      "@_version": "1.0",
-      "@_encoding": "utf-8",
-      "@_standalone": "yes"
-    },
     "API3G": {
       "CompanyToken": "8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3",
       "Request": "createToken",
@@ -61,8 +57,8 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
   try {
     const response = await axios.post(`${API_BASE_URL}/transaction`, xmlRequest, {
       headers: { 
-        'Content-Type': 'text/xml',
-        'Accept': 'text/xml'
+        'Content-Type': 'application/xml',
+        'Accept': 'application/xml'
       },
       responseType: 'text'
     });
@@ -91,6 +87,7 @@ export const verifyDPOToken = async (transToken: string): Promise<DPOPaymentResp
     processEntities: true,
     suppressBooleanAttributes: false
   });
+
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
@@ -99,11 +96,6 @@ export const verifyDPOToken = async (transToken: string): Promise<DPOPaymentResp
   });
 
   const xmlObj = {
-    "?xml": {
-      "@_version": "1.0",
-      "@_encoding": "utf-8",
-      "@_standalone": "yes"
-    },
     "API3G": {
       "CompanyToken": "8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3",
       "Request": "verifyToken",
@@ -117,8 +109,8 @@ export const verifyDPOToken = async (transToken: string): Promise<DPOPaymentResp
   try {
     const response = await axios.post(`${API_BASE_URL}/verify`, xmlRequest, {
       headers: { 
-        'Content-Type': 'text/xml',
-        'Accept': 'text/xml'
+        'Content-Type': 'application/xml',
+        'Accept': 'application/xml'
       },
       responseType: 'text'
     });
