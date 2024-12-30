@@ -47,21 +47,25 @@ const DonationForm = () => {
         body: xmlRequest,
       });
 
-      // Since we're using no-cors, we won't be able to read the response
-      // We'll need to handle this differently
-      if (!response.ok && response.type !== 'opaque') {
-        throw new Error('Network response was not ok');
+      // Since we're using no-cors mode, we need to handle the response differently
+      // For development purposes, we'll simulate a successful API response
+      // In production, this should be handled by a backend proxy
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(await response.text(), "text/xml");
+      
+      const transToken = xmlDoc.querySelector("TransToken")?.textContent;
+      const result = xmlDoc.querySelector("Result")?.textContent;
+      const resultExplanation = xmlDoc.querySelector("ResultExplanation")?.textContent;
+
+      if (!transToken || !result) {
+        throw new Error("Invalid API response");
       }
 
-      // For testing purposes, we'll use a mock successful response
-      // In production, you should implement a backend proxy or contact DPO to enable CORS
-      const mockResponse = {
-        Result: "000",
-        TransToken: `TEST_TOKEN_${Date.now()}`,
-        ResultExplanation: "Success"
-      };
-
-      return mockResponse as DPOPaymentResponse;
+      return {
+        TransToken: transToken,
+        Result: result,
+        ResultExplanation: resultExplanation || "Success"
+      } as DPOPaymentResponse;
     } catch (error) {
       console.error('Error creating payment:', error);
       throw error;
@@ -76,13 +80,14 @@ const DonationForm = () => {
       const paymentResponse = await createDPOPaymentRequest();
       
       if (paymentResponse.Result === "000") {
-        // Redirect to DPO payment page with increased timeout parameter
+        // Use the actual token from the API response
         const paymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${paymentResponse.TransToken}&timeout=1800`;
         window.location.href = paymentUrl;
       } else {
         toast.error(`Payment initialization failed: ${paymentResponse.ResultExplanation}`);
       }
     } catch (error) {
+      console.error('Payment error:', error);
       toast.error("Failed to process payment. Please try again.");
     } finally {
       setIsProcessing(false);
