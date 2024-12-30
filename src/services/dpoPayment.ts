@@ -67,13 +67,12 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
       throw new Error('Network response was not ok');
     }
 
-    // Parse the XML response to get the actual token
-    // Note: Since we're using no-cors mode, we can't actually read the response
-    // In production, this should be handled through a backend proxy
-    // For now, we'll simulate a successful response
+    // Note: In production, this should be handled through a backend proxy
+    // to properly parse the XML response and extract the token
+    // For development purposes, we simulate a successful response
     return {
       Result: "000",
-      TransToken: transRef, // Using our generated reference as the token
+      TransToken: `${transRef}`, // This should come from the actual XML response in production
       ResultExplanation: "Success"
     };
   } catch (error) {
