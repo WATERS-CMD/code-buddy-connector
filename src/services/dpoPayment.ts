@@ -56,7 +56,7 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
   console.log('Sending DPO request:', xmlRequest);
 
   try {
-    const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
+    const response = await fetch('https://secure.3gdirectpay.com/API/v6', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/xml',
@@ -113,7 +113,7 @@ export const verifyDPOToken = async (transToken: string): Promise<VerifyTokenRes
   console.log('Sending verify token request:', xmlRequest);
 
   try {
-    const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
+    const response = await fetch('https://secure.3gdirectpay.com/API/v6', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/xml',
