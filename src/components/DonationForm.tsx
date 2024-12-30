@@ -42,22 +42,31 @@ const DonationForm = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/xml',
+          'Accept': 'application/xml',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
         },
-        mode: 'no-cors',
+        mode: 'cors',
         body: xmlRequest,
       });
 
-      // Since we're using no-cors mode, we need to handle the response differently
-      // For development purposes, we'll simulate a successful API response
-      // In production, this should be handled by a backend proxy
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      console.log('API Response:', responseText); // Debug log
+
       const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(await response.text(), "text/xml");
+      const xmlDoc = parser.parseFromString(responseText, "text/xml");
       
       const transToken = xmlDoc.querySelector("TransToken")?.textContent;
       const result = xmlDoc.querySelector("Result")?.textContent;
       const resultExplanation = xmlDoc.querySelector("ResultExplanation")?.textContent;
 
       if (!transToken || !result) {
+        console.error('Invalid API response structure:', responseText); // Debug log
         throw new Error("Invalid API response");
       }
 
@@ -80,7 +89,6 @@ const DonationForm = () => {
       const paymentResponse = await createDPOPaymentRequest();
       
       if (paymentResponse.Result === "000") {
-        // Use the actual token from the API response
         const paymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${paymentResponse.TransToken}&timeout=1800`;
         window.location.href = paymentUrl;
       } else {
