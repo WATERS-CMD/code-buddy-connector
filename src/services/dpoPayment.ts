@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 
-const API_BASE_URL = 'http://https://secure.3gdirectpay.com/API/v6/';
+const API_BASE_URL = 'http://secure.3gdirectpay.com/API/v6/';
 const WHITELISTED_DOMAIN = 'apolytosmanagement.com';
 
 interface DPOPaymentResponse {
