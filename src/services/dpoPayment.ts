@@ -1,34 +1,3 @@
-interface DPOPaymentResponse {
-  TransToken: string;
-  Result: string;
-  ResultExplanation: string;
-}
-
-interface VerifyTokenResponse {
-  Result: string;
-  ResultExplanation: string;
-  TransactionToken: string;
-  TransactionRef: string;
-  CustomerName?: string;
-  CustomerCredit?: string;
-  TransactionApproval?: string;
-  TransactionCurrency: string;
-  TransactionAmount: string;
-  FraudAlert: string;
-  FraudExplnation: string;
-  TransactionNetAmount: string;
-  TransactionSettlementDate: string;
-  TransactionRollingReserveAmount: string;
-  TransactionRollingReserveDate: string;
-  CustomerPhone?: string;
-  CustomerCountry?: string;
-  CustomerAddress?: string;
-  CustomerCity?: string;
-  CustomerZip?: string;
-  MobilePaymentRequest?: string;
-  AccRef?: string;
-}
-
 export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse> => {
   const transRef = `TRANS${Date.now()}`;
   const xmlRequest = `<?xml version="1.0" encoding="utf-8"?>
@@ -68,7 +37,7 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
     });
 
     console.log('DPO response status:', response.status);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('DPO error response:', errorText);
@@ -84,15 +53,15 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
     const resultCode = xmlDoc.querySelector('Result')?.textContent || '';
     let transToken = xmlDoc.querySelector('TransToken')?.textContent || '';
 
-    // Clean up the transaction token by removing any unnecessary prefixes
-    if (transToken.includes('TEST_TOKEN_')) {
-      transToken = transToken.split('TEST_TOKEN_')[1];
+    // Extract the token from the URL if necessary
+    const tokenMatch = transToken.match(/ID=([^&]+)/); // Matches "ID=..."
+    if (tokenMatch) {
+      transToken = tokenMatch[1]; // Extracts the actual token part
     }
-    if (transToken.includes('&timeout=')) {
-      transToken = transToken.split('&timeout=')[0];
-    }
-    if (transToken.includes('https://secure.3gdirectpay.com/payv3.php?ID=')) {
-      transToken = transToken.replace('https://secure.3gdirectpay.com/payv3.php?ID=', '');
+
+    // Remove the TEST_TOKEN prefix if it exists
+    if (transToken.startsWith('TEST_TOKEN_')) {
+      transToken = transToken.replace('TEST_TOKEN_', '');
     }
 
     const resultExplanation = xmlDoc.querySelector('ResultExplanation')?.textContent || '';
@@ -110,62 +79,6 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
     };
   } catch (error) {
     console.error('Error creating payment token:', error);
-    throw error;
-  }
-};
-
-export const verifyDPOToken = async (transToken: string): Promise<VerifyTokenResponse> => {
-  const xmlRequest = `<?xml version="1.0" encoding="utf-8"?>
-    <API3G>
-      <CompanyToken>8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3</CompanyToken>
-      <Request>verifyToken</Request>
-      <TransactionToken>${transToken}</TransactionToken>
-    </API3G>`;
-
-  console.log('Sending verify token request:', xmlRequest);
-
-  try {
-    const response = await fetch('https://secure.3gdirectpay.com/API/v6', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/xml',
-        'Accept': 'application/xml',
-        'Origin': window.location.origin,
-      },
-      mode: 'cors',
-      body: xmlRequest,
-    });
-
-    console.log('Verify token response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Verify token error response:', errorText);
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const xmlText = await response.text();
-    console.log('Verify token response XML:', xmlText);
-
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-
-    return {
-      Result: xmlDoc.querySelector('Result')?.textContent || '',
-      ResultExplanation: xmlDoc.querySelector('ResultExplanation')?.textContent || '',
-      TransactionToken: xmlDoc.querySelector('TransactionToken')?.textContent || '',
-      TransactionRef: xmlDoc.querySelector('TransactionRef')?.textContent || '',
-      TransactionCurrency: xmlDoc.querySelector('TransactionCurrency')?.textContent || '',
-      TransactionAmount: xmlDoc.querySelector('TransactionAmount')?.textContent || '',
-      FraudAlert: xmlDoc.querySelector('FraudAlert')?.textContent || '',
-      FraudExplnation: xmlDoc.querySelector('FraudExplanation')?.textContent || '',
-      TransactionNetAmount: xmlDoc.querySelector('TransactionNetAmount')?.textContent || '',
-      TransactionSettlementDate: xmlDoc.querySelector('TransactionSettlementDate')?.textContent || '',
-      TransactionRollingReserveAmount: xmlDoc.querySelector('TransactionRollingReserveAmount')?.textContent || '',
-      TransactionRollingReserveDate: xmlDoc.querySelector('TransactionRollingReserveDate')?.textContent || '',
-    };
-  } catch (error) {
-    console.error('Error verifying token:', error);
     throw error;
   }
 };
