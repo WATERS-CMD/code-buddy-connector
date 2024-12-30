@@ -7,15 +7,15 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
       <Transaction>
         <PaymentAmount>${amount}</PaymentAmount>
         <PaymentCurrency>USD</PaymentCurrency>
-        <CompanyRef>${transRef}</CompanyRef>
+        <CompanyRef>49FKEOA</CompanyRef>
         <RedirectURL>https://apolytosmanagement.com/payment-complete</RedirectURL>
         <BackURL>https://apolytosmanagement.com/donation</BackURL>
         <CompanyRefUnique>0</CompanyRefUnique>
-        <PTL>30</PTL>
+        <PTL>4</PTL>
       </Transaction>
       <Services>
         <Service>
-          <ServiceType>3854</ServiceType>
+          <ServiceType>5525</ServiceType>
           <ServiceDescription>Donation</ServiceDescription>
           <ServiceDate>${new Date().toISOString().split('T')[0]}</ServiceDate>
         </Service>
