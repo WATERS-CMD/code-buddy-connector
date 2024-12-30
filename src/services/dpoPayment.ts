@@ -58,7 +58,10 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
       method: 'POST',
       headers: {
         'Content-Type': 'application/xml',
+        'Accept': 'application/xml',
+        'Origin': window.location.origin,
       },
+      credentials: 'include',
       body: xmlRequest,
     });
 
@@ -98,7 +101,10 @@ export const verifyDPOToken = async (transToken: string): Promise<VerifyTokenRes
       method: 'POST',
       headers: {
         'Content-Type': 'application/xml',
+        'Accept': 'application/xml',
+        'Origin': window.location.origin,
       },
+      credentials: 'include',
       body: xmlRequest,
     });
 
