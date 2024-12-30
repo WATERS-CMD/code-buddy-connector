@@ -44,7 +44,13 @@ const DonationForm = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/xml',
+          'Accept': 'application/xml',
+          'Origin': 'https://apolytosmanagement.com',
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'Content-Type',
         },
+        mode: 'cors',
+        credentials: 'include',
         body: xmlRequest,
       });
 
@@ -160,6 +166,7 @@ const DonationForm = () => {
       </div>
     </form>
   );
+
 };
 
 export default DonationForm;
