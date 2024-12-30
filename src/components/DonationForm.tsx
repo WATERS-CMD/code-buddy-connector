@@ -38,29 +38,17 @@ const DonationForm = () => {
       </API3G>`;
 
     try {
-      // First try with preflight request
-      const preflightResponse = await fetch('https://secure.3gdirectpay.com/API/v6/', {
-        method: 'OPTIONS',
-        headers: {
-          'Origin': window.location.origin,
-          'Access-Control-Request-Method': 'POST',
-          'Access-Control-Request-Headers': 'Content-Type, Accept',
-        },
+      // Set up headers for the main request
+      const headers = new Headers({
+        'Content-Type': 'application/xml',
+        'Accept': 'application/xml',
+        'Origin': window.location.origin,
       });
 
-      // Proceed with main request
+      // Main request with proper headers
       const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/xml',
-          'Accept': 'application/xml',
-          'Origin': window.location.origin,
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Accept, Origin',
-          'Access-Control-Allow-Credentials': 'true',
-        },
-        credentials: 'include',
+        headers: headers,
         mode: 'cors',
         body: xmlRequest,
       });
