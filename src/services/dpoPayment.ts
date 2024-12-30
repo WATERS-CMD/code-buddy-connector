@@ -16,11 +16,13 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
     format: true,
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
-    suppressEmptyNode: true
+    suppressEmptyNode: true,
+    processEntities: true
   });
   const parser = new XMLParser({
     ignoreAttributes: false,
-    attributeNamePrefix: "@_"
+    attributeNamePrefix: "@_",
+    parseAttributeValue: true
   });
 
   const xmlObj = {
@@ -52,8 +54,8 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
   try {
     const response = await axios.post(`${API_BASE_URL}/transaction`, xmlRequest, {
       headers: { 
-        'Content-Type': 'application/xml',
-        'Accept': 'application/xml'
+        'Content-Type': 'text/xml',
+        'Accept': 'text/xml'
       },
       responseType: 'text'
     });
@@ -78,11 +80,13 @@ export const verifyDPOToken = async (transToken: string): Promise<DPOPaymentResp
     format: true,
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
-    suppressEmptyNode: true
+    suppressEmptyNode: true,
+    processEntities: true
   });
   const parser = new XMLParser({
     ignoreAttributes: false,
-    attributeNamePrefix: "@_"
+    attributeNamePrefix: "@_",
+    parseAttributeValue: true
   });
 
   const xmlObj = {
@@ -99,8 +103,8 @@ export const verifyDPOToken = async (transToken: string): Promise<DPOPaymentResp
   try {
     const response = await axios.post(`${API_BASE_URL}/verify`, xmlRequest, {
       headers: { 
-        'Content-Type': 'application/xml',
-        'Accept': 'application/xml'
+        'Content-Type': 'text/xml',
+        'Accept': 'text/xml'
       },
       responseType: 'text'
     });
