@@ -59,21 +59,25 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
       headers: {
         'Content-Type': 'application/xml',
       },
-      mode: 'no-cors',
       body: xmlRequest,
     });
 
-    if (!response.ok && response.type !== 'opaque') {
+    if (!response.ok) {
       throw new Error('Network response was not ok');
     }
 
-    // Note: In production, this should be handled through a backend proxy
-    // to properly parse the XML response and extract the token
-    // For development purposes, we simulate a successful response
+    const xmlText = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+    
+    const resultCode = xmlDoc.querySelector('Result')?.textContent || '';
+    const transToken = xmlDoc.querySelector('TransToken')?.textContent || '';
+    const resultExplanation = xmlDoc.querySelector('ResultExplanation')?.textContent || '';
+
     return {
-      Result: "000",
-      TransToken: `${transRef}`, // This should come from the actual XML response in production
-      ResultExplanation: "Success"
+      Result: resultCode,
+      TransToken: transToken,
+      ResultExplanation: resultExplanation
     };
   } catch (error) {
     console.error('Error creating payment token:', error);
@@ -95,28 +99,30 @@ export const verifyDPOToken = async (transToken: string): Promise<VerifyTokenRes
       headers: {
         'Content-Type': 'application/xml',
       },
-      mode: 'no-cors',
       body: xmlRequest,
     });
 
-    if (!response.ok && response.type !== 'opaque') {
+    if (!response.ok) {
       throw new Error('Network response was not ok');
     }
 
-    // Mock response for testing
+    const xmlText = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+
     return {
-      Result: "000",
-      ResultExplanation: "Transaction Verified",
-      TransactionToken: transToken,
-      TransactionRef: `REF_${Date.now()}`,
-      TransactionCurrency: "USD",
-      TransactionAmount: "100.00",
-      FraudAlert: "0",
-      FraudExplnation: "",
-      TransactionNetAmount: "97.00",
-      TransactionSettlementDate: new Date().toISOString(),
-      TransactionRollingReserveAmount: "3.00",
-      TransactionRollingReserveDate: new Date().toISOString(),
+      Result: xmlDoc.querySelector('Result')?.textContent || '',
+      ResultExplanation: xmlDoc.querySelector('ResultExplanation')?.textContent || '',
+      TransactionToken: xmlDoc.querySelector('TransactionToken')?.textContent || '',
+      TransactionRef: xmlDoc.querySelector('TransactionRef')?.textContent || '',
+      TransactionCurrency: xmlDoc.querySelector('TransactionCurrency')?.textContent || '',
+      TransactionAmount: xmlDoc.querySelector('TransactionAmount')?.textContent || '',
+      FraudAlert: xmlDoc.querySelector('FraudAlert')?.textContent || '',
+      FraudExplnation: xmlDoc.querySelector('FraudExplanation')?.textContent || '',
+      TransactionNetAmount: xmlDoc.querySelector('TransactionNetAmount')?.textContent || '',
+      TransactionSettlementDate: xmlDoc.querySelector('TransactionSettlementDate')?.textContent || '',
+      TransactionRollingReserveAmount: xmlDoc.querySelector('TransactionRollingReserveAmount')?.textContent || '',
+      TransactionRollingReserveDate: xmlDoc.querySelector('TransactionRollingReserveDate')?.textContent || '',
     };
   } catch (error) {
     console.error('Error verifying token:', error);
