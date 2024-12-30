@@ -14,7 +14,7 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
       <Transaction>
         <PaymentAmount>${amount}</PaymentAmount>
         <PaymentCurrency>USD</PaymentCurrency>
-        <CompanyRef>49FKEOA</CompanyRef>
+        <CompanyRef>${transref}</CompanyRef>
         <RedirectURL>https://apolytosmanagement.com/payment-complete</RedirectURL>
         <BackURL>https://apolytosmanagement.com/donation</BackURL>
         <CompanyRefUnique>0</CompanyRefUnique>
