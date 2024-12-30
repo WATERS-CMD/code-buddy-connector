@@ -37,7 +37,9 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
       headers: {
         'Content-Type': 'application/xml',
         'Accept': 'application/xml',
+        'Origin': 'https://apolytosmanagement.com'
       },
+      credentials: 'include',
       mode: 'cors',
       body: xmlRequest,
     });
@@ -99,7 +101,9 @@ export const verifyDPOToken = async (transToken: string): Promise<DPOPaymentResp
       headers: {
         'Content-Type': 'application/xml',
         'Accept': 'application/xml',
+        'Origin': 'https://apolytosmanagement.com'
       },
+      credentials: 'include',
       mode: 'cors',
       body: xmlRequest,
     });
