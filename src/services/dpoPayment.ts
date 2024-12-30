@@ -53,6 +53,8 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
       </Services>
     </API3G>`;
 
+  console.log('Sending DPO request:', xmlRequest);
+
   try {
     const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
       method: 'POST',
@@ -61,21 +63,33 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
         'Accept': 'application/xml',
         'Origin': window.location.origin,
       },
-      credentials: 'include',
+      mode: 'cors',
       body: xmlRequest,
     });
 
+    console.log('DPO response status:', response.status);
+    
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      const errorText = await response.text();
+      console.error('DPO error response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const xmlText = await response.text();
+    console.log('DPO response XML:', xmlText);
+
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
     
     const resultCode = xmlDoc.querySelector('Result')?.textContent || '';
     const transToken = xmlDoc.querySelector('TransToken')?.textContent || '';
     const resultExplanation = xmlDoc.querySelector('ResultExplanation')?.textContent || '';
+
+    console.log('Parsed DPO response:', {
+      Result: resultCode,
+      TransToken: transToken,
+      ResultExplanation: resultExplanation
+    });
 
     return {
       Result: resultCode,
@@ -96,6 +110,8 @@ export const verifyDPOToken = async (transToken: string): Promise<VerifyTokenRes
       <TransactionToken>${transToken}</TransactionToken>
     </API3G>`;
 
+  console.log('Sending verify token request:', xmlRequest);
+
   try {
     const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
       method: 'POST',
@@ -104,15 +120,21 @@ export const verifyDPOToken = async (transToken: string): Promise<VerifyTokenRes
         'Accept': 'application/xml',
         'Origin': window.location.origin,
       },
-      credentials: 'include',
+      mode: 'cors',
       body: xmlRequest,
     });
 
+    console.log('Verify token response status:', response.status);
+
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      const errorText = await response.text();
+      console.error('Verify token error response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const xmlText = await response.text();
+    console.log('Verify token response XML:', xmlText);
+
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
 
