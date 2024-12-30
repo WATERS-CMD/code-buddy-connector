@@ -16,30 +16,29 @@ const DonationForm = () => {
   const createDPOPaymentRequest = async () => {
     const transRef = `TRANS${Date.now()}`;
     const xmlRequest = `<?xml version="1.0" encoding="utf-8"?>
-      <API3G>
-        <CompanyToken>8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3</CompanyToken>
-        <Request>createToken</Request>
-        <Transaction>
-          <PaymentAmount>${amount}</PaymentAmount>
-          <PaymentCurrency>USD</PaymentCurrency>
-          <CompanyRef>${transRef}</CompanyRef>
-          <RedirectURL>https://apolytosmanagement.com/payment-complete</RedirectURL>
-          <BackURL>https://apolytosmanagement.com/donation</BackURL>
-          <CompanyRefUnique>0</CompanyRefUnique>
-          <PTL>30</PTL>
-        </Transaction>
-        <Services>
-          <Service>
-            <ServiceType>5525</ServiceType>
-            <ServiceDescription>Donation</ServiceDescription>
-            <ServiceDate>${new Date().toISOString().split('T')[0]}</ServiceDate>
-          </Service>
-        </Services>
-      </API3G>`;
+<API3G>
+  <CompanyToken>8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3</CompanyToken>
+  <Request>createToken</Request>
+  <Transaction>
+    <PaymentAmount>${amount}</PaymentAmount>
+    <PaymentCurrency>USD</PaymentCurrency>
+    <CompanyRef>${transRef}</CompanyRef>
+    <RedirectURL>https://apolytosmanagement.com/payment-complete</RedirectURL>
+    <BackURL>https://apolytosmanagement.com/donation</BackURL>
+    <CompanyRefUnique>0</CompanyRefUnique>
+    <PTL>30</PTL>
+  </Transaction>
+  <Services>
+    <Service>
+      <ServiceType>5525</ServiceType>
+      <ServiceDescription>Donation</ServiceDescription>
+      <ServiceDate>${new Date().toISOString().split('T')[0]}</ServiceDate>
+    </Service>
+  </Services>
+</API3G>`;
 
     try {
-      // Since we can't make direct API calls due to CORS, we'll use a proxy endpoint
-      const response = await fetch('/api/dpo/create-token', {
+      const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/xml',
@@ -64,7 +63,6 @@ const DonationForm = () => {
         throw new Error(resultExplanation || 'Failed to create payment token');
       }
 
-      // Store the token in sessionStorage for verification after redirect
       sessionStorage.setItem('dpoTransactionToken', transToken);
       
       return {
@@ -87,9 +85,7 @@ const DonationForm = () => {
       const paymentResponse = await createDPOPaymentRequest();
       
       if (paymentResponse.Result === "000") {
-        // Redirect to DPO payment page
-        const paymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${paymentResponse.TransToken}`;
-        window.location.href = paymentUrl;
+        window.location.href = `https://secure.3gdirectpay.com/payv3.php?ID=${paymentResponse.TransToken}`;
       } else {
         toast.error(`Payment initialization failed: ${paymentResponse.ResultExplanation}`);
       }
