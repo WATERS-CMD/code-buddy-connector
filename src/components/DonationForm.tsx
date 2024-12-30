@@ -11,8 +11,6 @@ interface DPOPaymentResponse {
 
 const DonationForm = () => {
   const [amount, setAmount] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const createDPOPaymentRequest = async () => {
@@ -128,34 +126,6 @@ const DonationForm = () => {
           />
         </div>
 
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Your Name
-          </label>
-          <Input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email Address
-          </label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            required
-          />
-        </div>
-
         <Button 
           type="submit" 
           className="w-full"
@@ -166,7 +136,6 @@ const DonationForm = () => {
       </div>
     </form>
   );
-
 };
 
 export default DonationForm;
