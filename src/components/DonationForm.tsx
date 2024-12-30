@@ -38,25 +38,41 @@ const DonationForm = () => {
       </API3G>`;
 
     try {
+      // First try with preflight request
+      const preflightResponse = await fetch('https://secure.3gdirectpay.com/API/v6/', {
+        method: 'OPTIONS',
+        headers: {
+          'Origin': window.location.origin,
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'Content-Type, Accept',
+        },
+      });
+
+      // Proceed with main request
       const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/xml',
           'Accept': 'application/xml',
+          'Origin': window.location.origin,
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Headers': 'Content-Type, Accept, Origin',
+          'Access-Control-Allow-Credentials': 'true',
         },
+        credentials: 'include',
         mode: 'cors',
         body: xmlRequest,
       });
 
       if (!response.ok) {
+        console.error('Response status:', response.status);
+        console.error('Response headers:', Object.fromEntries(response.headers.entries()));
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const responseText = await response.text();
-      console.log('API Response:', responseText); // Debug log
+      console.log('API Response:', responseText);
 
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(responseText, "text/xml");
@@ -66,7 +82,7 @@ const DonationForm = () => {
       const resultExplanation = xmlDoc.querySelector("ResultExplanation")?.textContent;
 
       if (!transToken || !result) {
-        console.error('Invalid API response structure:', responseText); // Debug log
+        console.error('Invalid API response structure:', responseText);
         throw new Error("Invalid API response");
       }
 
