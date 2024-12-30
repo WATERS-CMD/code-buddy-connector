@@ -17,15 +17,22 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
     suppressEmptyNode: true,
-    processEntities: true
+    processEntities: true,
+    suppressBooleanAttributes: false
   });
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
-    parseAttributeValue: true
+    parseAttributeValue: true,
+    allowBooleanAttributes: true
   });
 
   const xmlObj = {
+    "?xml": {
+      "@_version": "1.0",
+      "@_encoding": "utf-8",
+      "@_standalone": "yes"
+    },
     "API3G": {
       "CompanyToken": "8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3",
       "Request": "createToken",
@@ -40,7 +47,7 @@ export const createDPOToken = async (amount: string): Promise<DPOPaymentResponse
       },
       "Services": {
         "Service": {
-          "ServiceType": "5525",
+          "@_ServiceType": "5525",
           "ServiceDescription": "Donation",
           "ServiceDate": new Date().toISOString().split('T')[0]
         }
@@ -81,15 +88,22 @@ export const verifyDPOToken = async (transToken: string): Promise<DPOPaymentResp
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
     suppressEmptyNode: true,
-    processEntities: true
+    processEntities: true,
+    suppressBooleanAttributes: false
   });
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
-    parseAttributeValue: true
+    parseAttributeValue: true,
+    allowBooleanAttributes: true
   });
 
   const xmlObj = {
+    "?xml": {
+      "@_version": "1.0",
+      "@_encoding": "utf-8",
+      "@_standalone": "yes"
+    },
     "API3G": {
       "CompanyToken": "8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3",
       "Request": "verifyToken",
