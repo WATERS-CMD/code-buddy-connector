@@ -13,6 +13,7 @@ const DonationForm = () => {
   const [amount, setAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Function to create a payment token
   const createDPOPaymentRequest = async () => {
     const transRef = `TRANS${Date.now()}`;
     const xmlRequest = `<?xml version="1.0" encoding="utf-8"?>
@@ -44,6 +45,8 @@ const DonationForm = () => {
         'Origin': window.location.origin,
       });
 
+      console.log('Sending XML Request:', xmlRequest);
+
       const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
         method: 'POST',
         headers: headers,
@@ -52,10 +55,14 @@ const DonationForm = () => {
       });
 
       if (!response.ok) {
+        console.error('Response status:', response.status);
+        console.error('Response headers:', Object.fromEntries(response.headers.entries()));
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const responseText = await response.text();
+      console.log('API Response:', responseText);
+
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(responseText, "text/xml");
 
@@ -64,6 +71,7 @@ const DonationForm = () => {
       const resultExplanation = xmlDoc.querySelector("ResultExplanation")?.textContent;
 
       if (!transToken || !result) {
+        console.error('Invalid API response structure:', responseText);
         throw new Error("Invalid API response");
       }
 
@@ -78,6 +86,7 @@ const DonationForm = () => {
     }
   };
 
+  // Function to verify the transaction token
   const verifyDPOPaymentToken = async (transToken: string) => {
     const verifyXmlRequest = `<?xml version="1.0" encoding="utf-8"?>
       <API3G>
@@ -87,6 +96,8 @@ const DonationForm = () => {
       </API3G>`;
 
     try {
+      console.log('Sending Verify Token Request:', verifyXmlRequest);
+
       const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/xml' },
@@ -94,6 +105,8 @@ const DonationForm = () => {
       });
 
       const responseText = await response.text();
+      console.log('Verify Token Response:', responseText);
+
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(responseText, "text/xml");
 
@@ -111,17 +124,21 @@ const DonationForm = () => {
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
 
     try {
+      // Step 1: Create the payment request
       const paymentResponse = await createDPOPaymentRequest();
 
+      // Step 2: Verify the transaction token
       if (paymentResponse.Result === "000") {
         const isTransactionValid = await verifyDPOPaymentToken(paymentResponse.TransToken);
 
         if (isTransactionValid) {
+          // Step 3: Redirect to the payment page
           const paymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${paymentResponse.TransToken}&timeout=1800`;
           window.location.href = paymentUrl;
         } else {
@@ -138,6 +155,7 @@ const DonationForm = () => {
     }
   };
 
+  // Predefined donation amounts
   const predefinedAmounts = [10, 25, 50, 100];
 
   return (
