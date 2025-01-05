@@ -1,8 +1,6 @@
-import { toast } from "sonner";
-
 // Configuration
 const DPO_ENDPOINT_URL = "https://secure.3gdirectpay.com/API/v6/"; 
-const COMPANY_TOKEN = "9F416C11-127B-4DE2-AC7F-D5710E4C5E0A"; 
+const COMPANY_TOKEN = "9F416C11-127B-4DE2-AC7F-D5710E4C5E0A"; // Your company token
 const TEST_SERVICE = "3854";
 const TEST_PRODUCT = "Test Product";
 
@@ -13,6 +11,23 @@ interface PaymentResponse {
   TransToken?: string;
   TransRef?: string;
   [key: string]: any;
+}
+
+interface CreateTokenRequest {
+  CompanyToken: string;
+  Amount: string;
+  Currency: string;
+  Reference: string;
+  ReturnUrl: string;
+  BackUrl: string;
+  CompanyRef?: string;
+  RedirectURL?: string;
+  PTL?: number;
+}
+
+interface VerifyTokenRequest {
+  CompanyToken: string;
+  TransactionToken: string;
 }
 
 /**
@@ -42,21 +57,23 @@ export const createPaymentToken = async ({
       };
     }
 
-    const response = await fetch(`${DPO_ENDPOINT_URL}/createToken`, {
+    const request: CreateTokenRequest = {
+      CompanyToken: COMPANY_TOKEN,
+      Amount: amount,
+      Currency: currency,
+      Reference: reference,
+      ReturnUrl: returnUrl,
+      BackUrl: backUrl,
+      CompanyRef: reference,
+      PTL: 30
+    };
+
+    const response = await fetch(`${DPO_ENDPOINT_URL}createToken`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        CompanyToken: COMPANY_TOKEN,
-        Amount: amount,
-        Currency: currency,
-        Reference: reference,
-        ReturnUrl: returnUrl,
-        BackUrl: backUrl,
-        CompanyRef: reference,
-        PTL: 30
-      })
+      body: JSON.stringify(request)
     });
 
     if (!response.ok) {
@@ -87,15 +104,17 @@ export const verifyPaymentToken = async (transactionToken: string): Promise<Paym
       };
     }
 
-    const response = await fetch(`${DPO_ENDPOINT_URL}/verifyToken`, {
+    const request: VerifyTokenRequest = {
+      CompanyToken: COMPANY_TOKEN,
+      TransactionToken: transactionToken
+    };
+
+    const response = await fetch(`${DPO_ENDPOINT_URL}verifyToken`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        CompanyToken: COMPANY_TOKEN,
-        TransactionToken: transactionToken
-      })
+      body: JSON.stringify(request)
     });
 
     if (!response.ok) {
