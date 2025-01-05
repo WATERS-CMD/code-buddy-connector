@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { createPaymentToken } from "@/services/dpoPaymentService";
+import { createPaymentToken, getPaymentUrl } from "@/services/dpoPaymentService";
 
 const DonationForm = () => {
   const [amount, setAmount] = useState("");
@@ -22,10 +22,13 @@ const DonationForm = () => {
       });
       
       if (paymentResponse.Result === "000") {
-        // Construct the correct DPO payment URL
-        const paymentUrl = `https://secure.3gdirectpay.com/dpopayment.php?ID=${paymentResponse.TransToken}`;
-        // Redirect to the payment gateway
-        window.location.href = paymentUrl;
+        if (!paymentResponse.TransToken) {
+          throw new Error("No transaction token received");
+        }
+        // Store token in session storage for verification after redirect
+        sessionStorage.setItem('dpoTransactionToken', paymentResponse.TransToken);
+        // Redirect to DPO payment page
+        window.location.href = getPaymentUrl(paymentResponse.TransToken);
       } else {
         toast.error(`Payment initialization failed: ${paymentResponse.ResultExplanation}`);
       }

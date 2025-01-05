@@ -1,179 +1,140 @@
-interface CreateTokenParams {
-  amount: string;
-  currency: string;
-  reference: string;
-  returnUrl: string;
-  backUrl: string;
+import * as soap from 'soap';
+import { toast } from "sonner";
+
+// Configuration
+const DPO_ENDPOINT_URL = "https://secure.3gdirectpay.com/API/v6/"; // DPO API endpoint
+const COMPANY_TOKEN = "9F416C11-127B-4DE2-AC7F-D5710E4C5E0A"; // Replace with actual token in production
+const TEST_SERVICE = "3854";
+const TEST_PRODUCT = "Test Product";
+
+// Type definitions
+interface CreateTokenArgs {
+  CompanyToken: string;
+  Amount: string;
+  Currency: string;
+  Reference: string;
+  ReturnUrl: string;
+  BackUrl: string;
+  CompanyRef?: string;
+  RedirectURL?: string;
+  PTL?: number;
 }
 
-interface ChargeCardParams {
-  transactionToken: string;
-  creditCardNumber: string;
-  creditCardExpiry: string;
-  creditCardCVV: string;
-  cardHolderName: string;
-  chargeType?: string;
-  threeD?: boolean;
-}
-
-interface DPOPaymentResponse {
-  TransToken: string;
-  Result: string;
-  ResultExplanation: string;
-}
-
-interface DPOVerificationResponse {
+interface VerifyTokenArgs {
+  CompanyToken: string;
   TransactionToken: string;
-  Result: string;
-  ResultExplanation: string;
-  TransactionStatus: string;
 }
 
-interface DPOChargeResponse {
+interface PaymentResponse {
   Result: string;
   ResultExplanation: string;
-  TransactionRef?: string;
-  AuthCode?: string;
+  TransToken?: string;
+  TransRef?: string;
+  [key: string]: any;
 }
 
+/**
+ * Create a payment token for DPO Pay
+ */
 export const createPaymentToken = async ({
   amount,
   currency,
   reference,
   returnUrl,
   backUrl
-}: CreateTokenParams): Promise<DPOPaymentResponse> => {
-  const companyToken = "8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3";
-  
-  const xmlRequest = `<?xml version="1.0" encoding="utf-8"?>
-    <API3G>
-      <CompanyToken>${companyToken}</CompanyToken>
-      <Request>createToken</Request>
-      <Transaction>
-        <PaymentAmount>${amount}</PaymentAmount>
-        <PaymentCurrency>${currency}</PaymentCurrency>
-        <CompanyRef>${reference}</CompanyRef>
-        <RedirectURL>${returnUrl}</RedirectURL>
-        <BackURL>${backUrl}</BackURL>
-        <CompanyRefUnique>0</CompanyRefUnique>
-        <PTL>30</PTL>
-      </Transaction>
-      <Services>
-        <Service>
-          <ServiceType>3854</ServiceType>
-          <ServiceDescription>Donation</ServiceDescription>
-          <ServiceDate>${new Date().toISOString().split('T')[0]}</ServiceDate>
-        </Service>
-      </Services>
-    </API3G>`;
-
+}: {
+  amount: string;
+  currency: string;
+  reference: string;
+  returnUrl: string;
+  backUrl: string;
+}): Promise<PaymentResponse> => {
   try {
-    const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/xml',
-      },
-      body: xmlRequest,
-    });
-
-    if (!response.ok && response.type !== 'opaque') {
-      throw new Error('Network response was not ok');
+    // For development, return mock response
+    if (process.env.NODE_ENV === 'development') {
+      return {
+        Result: "000",
+        ResultExplanation: "Success",
+        TransToken: "TEST_TOKEN_" + Date.now(),
+        TransRef: reference
+      };
     }
 
-    // Mock response for development
+    const client = await soap.createClientAsync(DPO_ENDPOINT_URL);
+    
+    const args: CreateTokenArgs = {
+      CompanyToken: COMPANY_TOKEN,
+      Amount: amount,
+      Currency: currency,
+      Reference: reference,
+      ReturnUrl: returnUrl,
+      BackUrl: backUrl,
+      CompanyRef: reference,
+      PTL: 30 // 30 minutes payment time limit
+    };
+
+    const [response] = await client.CreateTokenAsync(args);
+    
+    if (!response || !response.TransToken) {
+      throw new Error('Invalid response from DPO API');
+    }
+
     return {
-      Result: "000",
-      TransToken: `TEST_TOKEN_${Date.now()}`,
-      ResultExplanation: "Success"
+      Result: response.Result,
+      ResultExplanation: response.ResultExplanation,
+      TransToken: response.TransToken,
+      TransRef: response.TransRef
     };
   } catch (error) {
     console.error('Error creating payment token:', error);
-    throw error;
+    throw new Error('Failed to create payment token');
   }
 };
 
-export const verifyPaymentToken = async (transactionToken: string): Promise<DPOVerificationResponse> => {
-  const companyToken = "8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3";
-  
-  const xmlRequest = `<?xml version="1.0" encoding="utf-8"?>
-    <API3G>
-      <CompanyToken>${companyToken}</CompanyToken>
-      <Request>verifyToken</Request>
-      <TransactionToken>${transactionToken}</TransactionToken>
-    </API3G>`;
-
+/**
+ * Verify a transaction token
+ */
+export const verifyPaymentToken = async (transactionToken: string): Promise<PaymentResponse> => {
   try {
-    const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/xml',
-      },
-      body: xmlRequest,
-    });
-
-    if (!response.ok && response.type !== 'opaque') {
-      throw new Error('Network response was not ok');
+    // For development, return mock response
+    if (process.env.NODE_ENV === 'development') {
+      return {
+        Result: "000",
+        ResultExplanation: "Transaction Verified",
+        TransactionApproved: "1",
+        TransactionStatusCode: "1",
+        TransactionStatusDescription: "Completed"
+      };
     }
 
-    // Mock verification response for development
+    const client = await soap.createClientAsync(DPO_ENDPOINT_URL);
+    
+    const args: VerifyTokenArgs = {
+      CompanyToken: COMPANY_TOKEN,
+      TransactionToken: transactionToken
+    };
+
+    const [response] = await client.VerifyTokenAsync(args);
+    
     return {
-      TransactionToken: transactionToken,
-      Result: "000",
-      ResultExplanation: "Transaction Verified",
-      TransactionStatus: "Completed"
+      Result: response.Result,
+      ResultExplanation: response.ResultExplanation,
+      TransactionApproved: response.TransactionApproved,
+      TransactionStatusCode: response.TransactionStatusCode,
+      TransactionStatusDescription: response.TransactionStatusDescription
     };
   } catch (error) {
     console.error('Error verifying payment token:', error);
-    throw error;
+    throw new Error('Failed to verify payment token');
   }
 };
 
-export const chargeCreditCard = async ({
-  transactionToken,
-  creditCardNumber,
-  creditCardExpiry,
-  creditCardCVV,
-  cardHolderName,
-  chargeType = "AUTH",
-  threeD = false
-}: ChargeCardParams): Promise<DPOChargeResponse> => {
-  const companyToken = "8D3DA73D-9D7F-4E09-96D4-3D44E7A83EA3";
-  
-  const xmlRequest = `<?xml version="1.0" encoding="utf-8"?>
-    <API3G>
-      <CompanyToken>${companyToken}</CompanyToken>
-      <Request>chargeTokenCreditCard</Request>
-      <TransactionToken>${transactionToken}</TransactionToken>
-      <CreditCardNumber>${creditCardNumber}</CreditCardNumber>
-      <CreditCardExpiry>${creditCardExpiry}</CreditCardExpiry>
-      <CreditCardCVV>${creditCardCVV}</CreditCardCVV>
-      <CardHolderName>${cardHolderName}</CardHolderName>
-      <ChargeType>${chargeType}</ChargeType>
-      <ThreeD>${threeD ? "1" : "0"}</ThreeD>
-    </API3G>`;
-
-  try {
-    const response = await fetch('https://secure.3gdirectpay.com/API/v6/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/xml',
-      },
-      body: xmlRequest,
-    });
-
-    if (!response.ok && response.type !== 'opaque') {
-      throw new Error('Network response was not ok');
-    }
-
-    // Mock charge response for development
-    return {
-      Result: "000",
-      ResultExplanation: "Transaction Successful",
-      TransactionRef: `TRANS_${Date.now()}`,
-      AuthCode: "123456"
-    };
-  } catch (error) {
-    console.error('Error charging credit card:', error);
-    throw error;
-  }
+/**
+ * Get the DPO payment URL for a transaction token
+ */
+export const getPaymentUrl = (transactionToken: string): string => {
+  return `https://secure.3gdirectpay.com/dpopayment.php?ID=${transactionToken}`;
 };
+
+// Export types for use in other components
+export type { PaymentResponse };
