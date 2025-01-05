@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { createPaymentToken, getPaymentUrl } from "@/services/dpoPaymentService";
+import { createPaymentToken, getPaymentUrl } from "@/services/dpo/paymentService";
 
 const DonationForm = () => {
   const [amount, setAmount] = useState("");
@@ -13,6 +13,8 @@ const DonationForm = () => {
     setIsProcessing(true);
 
     try {
+      console.log('Submitting amount:', amount); // Debug log
+      
       const paymentResponse = await createPaymentToken({
         amount,
         currency: "USD",
@@ -21,6 +23,8 @@ const DonationForm = () => {
         backUrl: window.location.origin + "/donation"
       });
       
+      console.log('Payment response:', paymentResponse); // Debug log
+
       if (paymentResponse.Result === "000") {
         if (!paymentResponse.TransToken) {
           throw new Error("No transaction token received");
