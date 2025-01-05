@@ -44,6 +44,14 @@ interface ChargeTokenRequest {
 }
 
 /**
+ * Format amount to have exactly 2 decimal places
+ */
+const formatAmount = (amount: string): string => {
+  const numericAmount = parseFloat(amount);
+  return numericAmount.toFixed(2);
+};
+
+/**
  * Create a payment token for DPO Pay
  */
 export const createPaymentToken = async ({
@@ -70,11 +78,13 @@ export const createPaymentToken = async ({
       };
     }
 
+    const formattedAmount = formatAmount(amount);
+
     const request: CreateTokenRequest = {
       CompanyToken: COMPANY_TOKEN,
       Service: TEST_SERVICE,
       Product: TEST_PRODUCT,
-      Amount: amount,
+      Amount: formattedAmount, // Use formatted amount
       Currency: currency,
       Reference: reference,
       ReturnUrl: returnUrl,
@@ -103,9 +113,6 @@ export const createPaymentToken = async ({
   }
 };
 
-/**
- * Verify a transaction token
- */
 export const verifyPaymentToken = async (transactionToken: string): Promise<PaymentResponse> => {
   try {
     // For development, return mock response
@@ -144,9 +151,6 @@ export const verifyPaymentToken = async (transactionToken: string): Promise<Paym
   }
 };
 
-/**
- * Charge a credit card using a transaction token
- */
 export const chargeTokenCreditCard = async ({
   transactionToken,
   cardNumber,
