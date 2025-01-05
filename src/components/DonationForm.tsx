@@ -17,17 +17,20 @@ const DonationForm = () => {
         amount,
         currency: "USD",
         reference: `TRANS${Date.now()}`,
-        returnUrl: "https://apolytosmanagement.com/payment-complete",
-        backUrl: "https://apolytosmanagement.com/donation"
+        returnUrl: window.location.origin + "/payment-complete",
+        backUrl: window.location.origin + "/donation"
       });
       
       if (paymentResponse.Result === "000") {
-        const paymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${paymentResponse.TransToken}&timeout=1800`;
+        // Construct the correct DPO payment URL
+        const paymentUrl = `https://secure.3gdirectpay.com/dpopayment.php?ID=${paymentResponse.TransToken}`;
+        // Redirect to the payment gateway
         window.location.href = paymentUrl;
       } else {
         toast.error(`Payment initialization failed: ${paymentResponse.ResultExplanation}`);
       }
     } catch (error) {
+      console.error('Payment error:', error);
       toast.error("Failed to process payment. Please try again.");
     } finally {
       setIsProcessing(false);
