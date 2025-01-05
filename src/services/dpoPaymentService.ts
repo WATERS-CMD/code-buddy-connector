@@ -1,30 +1,12 @@
-import * as soap from 'soap';
 import { toast } from "sonner";
 
 // Configuration
-const DPO_ENDPOINT_URL = "https://secure.3gdirectpay.com/API/v6/"; // DPO API endpoint
-const COMPANY_TOKEN = "9F416C11-127B-4DE2-AC7F-D5710E4C5E0A"; // Replace with actual token in production
+const DPO_ENDPOINT_URL = "https://secure.3gdirectpay.com/API/v6/"; 
+const COMPANY_TOKEN = "9F416C11-127B-4DE2-AC7F-D5710E4C5E0A"; 
 const TEST_SERVICE = "3854";
 const TEST_PRODUCT = "Test Product";
 
 // Type definitions
-interface CreateTokenArgs {
-  CompanyToken: string;
-  Amount: string;
-  Currency: string;
-  Reference: string;
-  ReturnUrl: string;
-  BackUrl: string;
-  CompanyRef?: string;
-  RedirectURL?: string;
-  PTL?: number;
-}
-
-interface VerifyTokenArgs {
-  CompanyToken: string;
-  TransactionToken: string;
-}
-
 interface PaymentResponse {
   Result: string;
   ResultExplanation: string;
@@ -60,31 +42,29 @@ export const createPaymentToken = async ({
       };
     }
 
-    const client = await soap.createClientAsync(DPO_ENDPOINT_URL);
-    
-    const args: CreateTokenArgs = {
-      CompanyToken: COMPANY_TOKEN,
-      Amount: amount,
-      Currency: currency,
-      Reference: reference,
-      ReturnUrl: returnUrl,
-      BackUrl: backUrl,
-      CompanyRef: reference,
-      PTL: 30 // 30 minutes payment time limit
-    };
+    const response = await fetch(`${DPO_ENDPOINT_URL}/createToken`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        CompanyToken: COMPANY_TOKEN,
+        Amount: amount,
+        Currency: currency,
+        Reference: reference,
+        ReturnUrl: returnUrl,
+        BackUrl: backUrl,
+        CompanyRef: reference,
+        PTL: 30
+      })
+    });
 
-    const [response] = await client.CreateTokenAsync(args);
-    
-    if (!response || !response.TransToken) {
-      throw new Error('Invalid response from DPO API');
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
     }
 
-    return {
-      Result: response.Result,
-      ResultExplanation: response.ResultExplanation,
-      TransToken: response.TransToken,
-      TransRef: response.TransRef
-    };
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error creating payment token:', error);
     throw new Error('Failed to create payment token');
@@ -107,22 +87,23 @@ export const verifyPaymentToken = async (transactionToken: string): Promise<Paym
       };
     }
 
-    const client = await soap.createClientAsync(DPO_ENDPOINT_URL);
-    
-    const args: VerifyTokenArgs = {
-      CompanyToken: COMPANY_TOKEN,
-      TransactionToken: transactionToken
-    };
+    const response = await fetch(`${DPO_ENDPOINT_URL}/verifyToken`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        CompanyToken: COMPANY_TOKEN,
+        TransactionToken: transactionToken
+      })
+    });
 
-    const [response] = await client.VerifyTokenAsync(args);
-    
-    return {
-      Result: response.Result,
-      ResultExplanation: response.ResultExplanation,
-      TransactionApproved: response.TransactionApproved,
-      TransactionStatusCode: response.TransactionStatusCode,
-      TransactionStatusDescription: response.TransactionStatusDescription
-    };
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error verifying payment token:', error);
     throw new Error('Failed to verify payment token');
