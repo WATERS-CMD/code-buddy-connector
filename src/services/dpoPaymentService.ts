@@ -1,156 +1,87 @@
-// Configuration
+import * as soap from "soap";
+
 const DPO_ENDPOINT_URL = "https://secure.3gdirectpay.com/API/v6/";
-const COMPANY_TOKEN = "9F416C11-127B-4DE2-AC7F-D5710E4C5E0A"; // Your company token
+const COMPANY_TOKEN = "9F416C11-127B-4DE2-AC7F-D5710E4C5E0A";
 const TEST_SERVICE = "3854";
 const TEST_PRODUCT = "Test Product";
 
-// Type definitions
-interface PaymentResponse {
-  Result: string;
-  ResultExplanation: string;
-  TransToken?: string;
-  TransRef?: string;
-  [key: string]: any;
-}
-
-interface CreateTokenRequest {
-  CompanyToken: string;
-  Amount: string;
-  Currency: string;
-  Reference: string;
-  ReturnUrl: string;
-  BackUrl: string;
-  Service?: string;
-  Product?: string;
-  CompanyRef?: string;
-  RedirectURL?: string;
-  PTL?: number;
-}
-
-interface VerifyTokenRequest {
-  CompanyToken: string;
-  TransactionToken: string;
-}
-
-interface ChargeTokenRequest {
-  CompanyToken: string;
-  TransactionToken: string;
-  CreditCardNumber: string;
-  CreditCardExpiry: string;
-  CreditCardCVV: string;
-  CardHolderName: string;
-  ChargeType?: string;
-  ThreeD?: object;
-}
-
 /**
- * Format amount to have exactly 2 decimal places
+ * Create a SOAP client and handle requests.
  */
-const formatAmount = (amount: string): string => {
-  const numericAmount = parseFloat(amount);
-  return numericAmount.toFixed(2);
+const createSoapClient = async (): Promise<soap.Client> => {
+  try {
+    return await soap.createClientAsync(DPO_ENDPOINT_URL);
+  } catch (error) {
+    console.error("Error creating SOAP client:", error);
+    throw new Error("Failed to create SOAP client");
+  }
 };
 
 /**
- * Create a payment token for DPO Pay
+ * Create a payment token.
  */
 export const createPaymentToken = async ({
   amount,
   currency,
   reference,
   returnUrl,
-  backUrl
+  backUrl,
 }: {
   amount: string;
   currency: string;
   reference: string;
   returnUrl: string;
   backUrl: string;
-}): Promise<PaymentResponse> => {
+}): Promise<any> => {
   try {
-    // For development, return mock response
-    if (process.env.NODE_ENV === 'development') {
-      return {
-        Result: "000",
-        ResultExplanation: "Success",
-        TransToken: "TEST_TOKEN_" + Date.now(),
-        TransRef: reference
-      };
-    }
+    const client = await createSoapClient();
 
-    const formattedAmount = formatAmount(amount);
-
-    const request: CreateTokenRequest = {
+    const request = {
       CompanyToken: COMPANY_TOKEN,
       Service: TEST_SERVICE,
       Product: TEST_PRODUCT,
-      Amount: formattedAmount, // Use formatted amount
+      Amount: amount,
       Currency: currency,
       Reference: reference,
       ReturnUrl: returnUrl,
       BackUrl: backUrl,
       CompanyRef: reference,
-      PTL: 30 // 30 minutes payment time limit
+      PTL: 30, // 30-minute payment time limit
     };
 
-    const response = await fetch(`${DPO_ENDPOINT_URL}createToken`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request)
-    });
-
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-
-    const data = await response.json();
-    return data;
+    const [result] = await client.CreateTokenAsync(request);
+    console.log("Create Token Response:", result);
+    return result;
   } catch (error) {
-    console.error('Error creating payment token:', error);
-    throw new Error('Failed to create payment token');
+    console.error("Error creating payment token:", error);
+    throw new Error("Failed to create payment token");
   }
 };
 
-export const verifyPaymentToken = async (transactionToken: string): Promise<PaymentResponse> => {
+/**
+ * Verify a payment token.
+ */
+export const verifyPaymentToken = async (transactionToken: string): Promise<any> => {
   try {
-    // For development, return mock response
-    if (process.env.NODE_ENV === 'development') {
-      return {
-        Result: "000",
-        ResultExplanation: "Transaction Verified",
-        TransactionApproved: "1",
-        TransactionStatusCode: "1",
-        TransactionStatusDescription: "Completed"
-      };
-    }
+    const client = await createSoapClient();
 
-    const request: VerifyTokenRequest = {
+    const request = {
       CompanyToken: COMPANY_TOKEN,
-      TransactionToken: transactionToken
+      TransactionToken: transactionToken,
     };
 
-    const response = await fetch(`${DPO_ENDPOINT_URL}verifyToken`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request)
-    });
-
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-
-    const data = await response.json();
-    return data;
+    const [result] = await client.VerifyTokenAsync(request);
+    console.log("Verify Token Response:", result);
+    return result;
   } catch (error) {
-    console.error('Error verifying payment token:', error);
-    throw new Error('Failed to verify payment token');
+    console.error("Error verifying payment token:", error);
+    throw new Error("Failed to verify payment token");
   }
 };
 
+/**
+ * Charge a credit card using a payment token.
+ */
 export const chargeTokenCreditCard = async ({
   transactionToken,
   cardNumber,
@@ -158,29 +89,20 @@ export const chargeTokenCreditCard = async ({
   cvv,
   cardholderName,
   chargeType,
-  threeD
+  threeD,
 }: {
   transactionToken: string;
   cardNumber: string;
-  expiryDate: string;
+  expiryDate: string; // MMYY format
   cvv: string;
   cardholderName: string;
   chargeType?: string;
   threeD?: object;
-}): Promise<PaymentResponse> => {
+}): Promise<any> => {
   try {
-    // For development, return mock response
-    if (process.env.NODE_ENV === 'development') {
-      return {
-        Result: "000",
-        ResultExplanation: "Transaction Successful",
-        TransactionApproved: "1",
-        TransactionStatusCode: "1",
-        TransactionStatusDescription: "Payment Completed"
-      };
-    }
+    const client = await createSoapClient();
 
-    const request: ChargeTokenRequest = {
+    const request = {
       CompanyToken: COMPANY_TOKEN,
       TransactionToken: transactionToken,
       CreditCardNumber: cardNumber,
@@ -188,32 +110,22 @@ export const chargeTokenCreditCard = async ({
       CreditCardCVV: cvv,
       CardHolderName: cardholderName,
       ChargeType: chargeType,
-      ThreeD: threeD
+      ThreeD: threeD,
     };
 
-    const response = await fetch(`${DPO_ENDPOINT_URL}chargeTokenCreditCard`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request)
-    });
-
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-
-    const data = await response.json();
-    return data;
+    const [result] = await client.chargeTokenCreditCardAsync(request);
+    console.log("Charge Credit Card Response:", result);
+    return result;
   } catch (error) {
-    console.error('Error charging credit card:', error);
-    throw new Error('Failed to process credit card payment');
+    console.error("Error charging credit card:", error);
+    throw new Error("Failed to charge credit card");
   }
 };
 
 /**
- * Get the DPO payment URL for a transaction token
+ * Get the payment URL for the transaction token.
  */
 export const getPaymentUrl = (transactionToken: string): string => {
+  if (!transactionToken) throw new Error("Transaction token is required");
   return `https://secure.3gdirectpay.com/dpopayment.php?ID=${transactionToken}`;
 };
